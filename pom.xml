@@ -2,10 +2,10 @@
   	
   	<modelVersion>4.0.0</modelVersion>
   	<groupId>tr.com.serkanozal</groupId>
-  	<artifactId>jillegal-common</artifactId>
+  	<artifactId>jillegal-core</artifactId>
   	<version>1.0.0-RELEASE</version>
-    <name>Jillegal Common</name>
-    <url>https://github.com/serkan-ozal/jillegal-common</url>
+    <name>Jillegal Core</name>
+    <url>https://github.com/serkan-ozal/jillegal-core</url>
     
   	<properties>
         
@@ -20,19 +20,18 @@
         <maven.deploy.plugin.version>2.6</maven.deploy.plugin.version>
         
         <jillegal.agent.version>1.0.0-RELEASE</jillegal.agent.version>
-        <tools.version>1.6.0</tools.version>
-        <guava.version>13.0</guava.version>
-        <commons.lang.version>2.6</commons.lang.version>
         <javassist.version>3.17.1-GA</javassist.version>
         <cglib.version>2.2</cglib.version>
         <log4j.version>1.2.16</log4j.version>
+        <guava.version>13.0</guava.version>
+        <commons.lang.version>2.6</commons.lang.version>
         <junit.version>4.11</junit.version>
         <mockito.version>1.9.0</mockito.version>
 
     </properties>
   
   	<build>
-        <finalName>jillegal</finalName>
+        <finalName>jillegal-common</finalName>
         <plugins> 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -57,64 +56,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.plugin.version}</version>
             </plugin>
-            <plugin>
-        		<groupId>org.apache.maven.plugins</groupId>
-        		<artifactId>maven-jar-plugin</artifactId>
-        		<configuration>
-          			<archive>
-          			    <manifest>
-                			<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                			<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-           				</manifest>
-            			<manifestEntries>
-              				<Agent-Class>tr.com.serkanozal.jillegal.agent.JillegalAgent</Agent-Class> 
-							<Premain-Class>tr.com.serkanozal.jillegal.agent.JillegalAgent</Premain-Class>
-							<Main-Class>tr.com.serkanozal.jillegal.agent.JillegalAgent</Main-Class>
-							<Boot-Class-Path>jillegal-${version}.jar</Boot-Class-Path>
-							<Can-Retransform-Classes>true</Can-Retransform-Classes>
-							<Can-Redefine-Classes>true</Can-Redefine-Classes>
-            			</manifestEntries>
-         		 	</archive>
-        		</configuration>
-      		</plugin>
-            <plugin>
-            	<artifactId>maven-assembly-plugin</artifactId>
-            	<configuration>
-            	    <finalName>jillegal-${version}</finalName>
-            	    <attach>false</attach>
-                	<appendAssemblyId>false</appendAssemblyId>
-                	<descriptorRefs>
-                    	<descriptorRef>jar-with-dependencies</descriptorRef>
-                	</descriptorRefs>
-                	<archive>
-                	     <manifest>
-                			<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                			<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-           				</manifest>
-            			<manifestEntries>
-              				<Agent-Class>tr.com.serkanozal.jillegal.agent.JillegalAgent</Agent-Class> 
-							<Premain-Class>tr.com.serkanozal.jillegal.agent.JillegalAgent</Premain-Class>
-							<Main-Class>tr.com.serkanozal.jillegal.agent.JillegalAgent</Main-Class>
-							<Boot-Class-Path>jillegal-${version}.jar</Boot-Class-Path>
-							<Can-Retransform-Classes>true</Can-Retransform-Classes>
-							<Can-Redefine-Classes>true</Can-Redefine-Classes>
-            			</manifestEntries>
-         		 	</archive>
-            	</configuration>
-        	</plugin>
-            <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>${maven.deploy.plugin.version}</version>
-				<configuration>
-					<repositoryId>maven-repository</repositoryId>
-					<url>https://github.com/serkan-ozal/maven-repository/raw/master/</url>
-					<file>${project.build.directory}/${project.build.finalName}.${project.packaging}</file>
-					<groupId>${project.groupId}</groupId>
-					<artifactId>${project.artifactId}</artifactId>
-					<version>${project.version}</version>
-				</configuration>
-			</plugin>
         </plugins>
         <resources>
             <resource>
@@ -126,18 +67,19 @@
     
    	<dependencies>
    	    
+   	    <!-- jillegal-agent                               -->
+		<!-- ============================================ -->
    	    <dependency>
             <groupId>tr.com.serkanozal</groupId>
             <artifactId>jillegal-agent</artifactId>
             <version>${jillegal.agent.version}</version>
         </dependency>
-   	    
-		<dependency>
-            <groupId>com.sun</groupId>
-            <artifactId>tools</artifactId>
-            <version>${tools.version}</version>
-        </dependency>
+        <!-- ============================================ -->
         
+        
+        
+		<!-- byte code instrumentation                    -->
+		<!-- ============================================ -->
 		<dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib</artifactId>
@@ -148,32 +90,46 @@
 			<artifactId>javassist</artifactId>
 			<version>${javassist.version}</version>
 		</dependency>
-		
-		<dependency>
+		<!-- ============================================ -->
+        
+        
+        
+		<!-- logging                                      -->
+		<!-- ============================================ -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+        <!-- ============================================ -->
+
+
+
+        <!-- utility                                      -->
+        <!-- ============================================ -->
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>${commons.lang.version}</version>
+        </dependency>
+       <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
         </dependency>
+		<!-- ============================================ -->
         
-        <!-- test -->
+        
+        
+        <!-- test                                         -->
+        <!-- ============================================ -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>${commons.lang.version}</version>
-        </dependency>
-       
-        <!-- logging -->
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
-        </dependency>
+        <!-- ============================================ -->
        
 	</dependencies>
 	
