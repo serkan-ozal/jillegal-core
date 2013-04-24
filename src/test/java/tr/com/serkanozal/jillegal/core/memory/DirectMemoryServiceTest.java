@@ -11,6 +11,8 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
+import tr.com.serkanozal.jillegal.core.util.JvmUtil;
+
 @SuppressWarnings("deprecation")
 public class DirectMemoryServiceTest {
 
@@ -49,10 +51,10 @@ public class DirectMemoryServiceTest {
 	public void valueRetrievedAndSetSuccessfullyWithDirectMemoryAccess() throws SecurityException, NoSuchFieldException {
 		SampleClass obj = new SampleClass();
 		
-		long addressOfField_b = directMemoryService.addressOfField(obj, "b");
-		long addressOfField_i = directMemoryService.addressOfField(obj, "i");
-		long addressOfField_l = directMemoryService.addressOfField(obj, "l");
-		
+		long addressOfField_b = JvmUtil.addressOfField(obj, "b");
+		long addressOfField_i = JvmUtil.addressOfField(obj, "i");
+		long addressOfField_l = JvmUtil.addressOfField(obj, "l");
+
 		Assert.assertEquals(100, directMemoryService.getByte(addressOfField_b));
 		Assert.assertEquals(5, directMemoryService.getInt(addressOfField_i));
 		Assert.assertEquals(10, directMemoryService.getLong(addressOfField_l));
@@ -80,7 +82,7 @@ public class DirectMemoryServiceTest {
 		Assert.assertEquals(200, objTarget.getI());
 		Assert.assertEquals(2000, objTarget.getL());
 		
-		directMemoryService.changeObject(objSource, objTarget);
+		directMemoryService.setObject(objSource, objTarget);
 		
 		Assert.assertEquals(100, objTarget.getI());
 		Assert.assertEquals(1000, objTarget.getL());

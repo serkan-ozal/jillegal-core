@@ -32,13 +32,13 @@ public class ModulesInitializer {
 				for (ModuleInfo moduleInfo : modulesInfo) {
 					try {
 						Class<?> moduleMain = Class.forName(moduleInfo.getModuleMain());
-						logger.info("\"" + moduleInfo.getModuleName() + "\"" + " module found");
+						logger.debug("\"" + moduleInfo.getModuleName() + "\"" + " module found");
 						Method initMethod = null;
 						try {
 							initMethod = moduleMain.getMethod("init");
 						}
 						catch (Exception e) {
-							logger.error("Initialization method could not be found for module " + moduleInfo.getModuleName() , e);
+							logger.debug("Initialization method could not be found for module " + moduleInfo.getModuleName() , e);
 							continue;
 						} 
 						if (initMethod != null) {
@@ -47,13 +47,13 @@ public class ModulesInitializer {
 								logger.info("\"" + moduleInfo.getModuleName() + "\"" + " successfully initialized");
 							}
 							catch (Exception e) {
-								logger.error("Initialization method could not be invoked for module " + moduleInfo.getModuleName() , e);
+								logger.debug("Initialization method could not be invoked for module " + moduleInfo.getModuleName() , e);
 								continue;
 							} 
 						}
 					} 
 					catch (ClassNotFoundException e) {
-						logger.error("Main class could not be found for module " + moduleInfo.getModuleName() , e);
+						logger.debug("Main class could not be found for module " + moduleInfo.getModuleName() , e);
 						continue;
 					} 
 				}

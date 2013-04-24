@@ -13,16 +13,10 @@ public interface DirectMemoryService {
 	void freeMemory(long address);
 	Object allocateInstance(Class<?> clazz);
 	void copyMemory(long sourceAddress, long destinationAddress, long size);
-	
-	long sizeOf(Class<?> objClass);
-	
-	long addressOf(Object obj);
-    long addressOfField(Object obj, String fieldName) throws SecurityException, NoSuchFieldException;
-    long addressOfClass(Class<?> clazz);
-    
+
     <T> T getObject(long address);
     <T> void setObject(long address, T obj);
-	<T> T changeObject(T source, T target);
+	<T> T setObject(T source, T target);
 	<T> T copyObject(T original);
 	
 	byte getByte(long address);

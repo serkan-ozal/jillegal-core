@@ -7,18 +7,12 @@
 
 package tr.com.serkanozal.jillegal.core.memory;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.LinkedList;
-import java.util.List;
-
 import org.apache.log4j.Logger;
 
 import sun.misc.Unsafe;
-import tr.com.serkanozal.jillegal.agent.JillegalAgent;
 import tr.com.serkanozal.jillegal.core.util.JvmUtil;
 
-@SuppressWarnings( { "unchecked", "restriction" } )
+@SuppressWarnings( { "unchecked" } )
 public class DirectMemoryServiceImpl implements DirectMemoryService {
 	
 	private final Logger logger = Logger.getLogger(getClass());
@@ -64,123 +58,7 @@ public class DirectMemoryServiceImpl implements DirectMemoryService {
     public void copyMemory(long sourceAddress, long destinationAddress, long size) {
     	unsafe.copyMemory(sourceAddress, destinationAddress, size);
     }
-   
-    public long sizeOfWithAgent(Object obj) {
-        return JillegalAgent.sizeOf(obj);
-    }
-    
-    public long sizeOfWithUnsafe(Object obj) {
-        if (obj == null) {
-            return 0;
-        }    
-        else {
-        	long classAddress = addressOfClass(obj.getClass());
-            switch (JvmUtil.getAddressSize()) {
-                case JvmUtil.SIZE_32_BIT:
-                    return unsafe.getInt(classAddress + JvmUtil.getSizeFieldOffsetOffsetInClass());  
-                case JvmUtil.SIZE_64_BIT:
-                    return unsafe.getInt(classAddress + JvmUtil.getSizeFieldOffsetOffsetInClass());  
-                default:
-                    throw new AssertionError("Unsupported address size: " + JvmUtil.getAddressSize());    
-            }
-        }    
-    }  
-    
-    public long sizeOfWithReflection(Class<?> objClass) {
-    	List<Field> instanceFields = new LinkedList<Field>();
-    	
-        do {
-            if (objClass == Object.class) {
-            	return JvmUtil.MIN_SIZE;
-            }
-            for (Field f : objClass.getDeclaredFields()) {
-                if ((f.getModifiers() & Modifier.STATIC) == 0) {
-                    instanceFields.add(f);
-                }    
-            }
-            
-            objClass = objClass.getSuperclass();
-        } while (instanceFields.isEmpty());
-
-        long maxOffset = 0;
-        for (Field f : instanceFields) {
-            long offset = unsafe.objectFieldOffset(f);
-            if (offset > maxOffset) {
-            	maxOffset = offset; 
-            }	
-        }
-        return (((long) maxOffset / JvmUtil.WORD) + 1) * JvmUtil.WORD; 
-    }
-
-    @Override
-    public long sizeOf(Class<?> objClass) {
-    	return sizeOfWithReflection(objClass);
-    }
-    
-    @Override
-    public synchronized long addressOf(Object obj) {
-        if (obj == null) {
-            return 0;
-        }
-        
-        objArray[0] = obj;
-        long objectAddress = JvmUtil.INVALID_ADDRESS;
-        
-        switch (JvmUtil.getIndexScale()) {
-            case JvmUtil.SIZE_32_BIT:
-            case JvmUtil.SIZE_64_BIT:
-                switch (JvmUtil.getAddressSize()) {
-                    case JvmUtil.SIZE_32_BIT:
-                        objectAddress = unsafe.getInt(objArray, JvmUtil.getBaseOffset());
-                        break;
-                    case JvmUtil.SIZE_64_BIT:
-                        objectAddress = unsafe.getLong(objArray, JvmUtil.getBaseOffset());
-                        break;    
-                    default:    
-                        throw new AssertionError("Unsupported address size: " + JvmUtil.getAddressSize()); 
-                }
-                break; 
-
-            default:
-                throw new AssertionError("Unsupported index scale: " + JvmUtil.getIndexScale());
-        }       
-
-        if (objectAddress != JvmUtil.INVALID_ADDRESS) {
-        	objectAddress = JvmUtil.toNativeAddress(objectAddress);
-        }
-        
-        return objectAddress;
-    }
   
-    @Override
-    public synchronized long addressOfField(Object obj, String fieldName) throws SecurityException, NoSuchFieldException {
-        long baseAddress = 0; 
-        long fieldOffset = 0;
-        Field field = obj.getClass().getDeclaredField(fieldName);
-        if (Modifier.isStatic(field.getModifiers())) {
-        	baseAddress = addressOfClass(obj.getClass());
-        	fieldOffset = unsafe.staticFieldOffset(field);
-        }
-        else {
-        	baseAddress = addressOf(obj);
-        	fieldOffset = unsafe.objectFieldOffset(field);
-        }
-        return baseAddress + fieldOffset;
-    }
-    
-    @Override
-    public long addressOfClass(Class<?> clazz) {
-    	long addressOfClass = addressOf(clazz);
-    	switch (JvmUtil.getAddressSize()) {
-	        case JvmUtil.SIZE_32_BIT:
-	            return JvmUtil.toNativeAddress(unsafe.getInt(addressOfClass + JvmUtil.getClassDefPointerOffsetInClass()));
-	        case JvmUtil.SIZE_64_BIT:
-	        	return JvmUtil.toNativeAddress(unsafe.getLong(addressOfClass + JvmUtil.getClassDefPointerOffsetInClass()));   
-	        default:    
-                throw new AssertionError("Unsupported address size: " + JvmUtil.getAddressSize());     
-    	}
-    }
-    
     @Override
     public synchronized <T> T getObject(long address) {
     	address = JvmUtil.toJvmAddress(address);
@@ -214,18 +92,18 @@ public class DirectMemoryServiceImpl implements DirectMemoryService {
             }
         }
         else {
-            long objSize = sizeOf(obj.getClass());
-            long objAddress = addressOf(obj);
+            long objSize = JvmUtil.sizeOf(obj.getClass());
+            long objAddress = JvmUtil.addressOf(obj);
             unsafe.copyMemory(objAddress, address, JvmUtil.getHeaderSize() + objSize);   
         }    
     }
     
     @Override
-    public synchronized <T> T changeObject(T source, T target) {
+    public synchronized <T> T setObject(T source, T target) {
         if (source == null) {
             throw new IllegalArgumentException("Source object is null !");
         }
-        long targetAddress = addressOf(target);
+        long targetAddress = JvmUtil.addressOf(target);
         setObject(targetAddress, source);
         
         return target;
@@ -236,7 +114,7 @@ public class DirectMemoryServiceImpl implements DirectMemoryService {
     	if (original == null) {
             throw new IllegalArgumentException("Original object is null !");
         }
-        long originalAddress = addressOf(original);
+        long originalAddress = JvmUtil.addressOf(original);
         Object[] array = new Object[] {null};
         
         switch (JvmUtil.getAddressSize()) {
