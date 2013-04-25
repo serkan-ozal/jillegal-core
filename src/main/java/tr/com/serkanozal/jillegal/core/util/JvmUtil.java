@@ -7,6 +7,7 @@
 
 package tr.com.serkanozal.jillegal.core.util;
 
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
@@ -631,16 +632,20 @@ public class JvmUtil {
     }
     
     public static void dump(long address, long size) {
+    	dump(System.out, address, size);
+    }
+    
+    public static void dump(PrintStream ps, long address, long size) {
     	for (int i = 0; i < size; i++) {
     		if (i % 16 == 0) {
-				System.out.print(String.format("[0x%04x]: ", i));
+				ps.print(String.format("[0x%04x]: ", i));
 			}
-	    	System.out.print(String.format("%02x ", unsafe.getByte(address + i)));
+    		ps.print(String.format("%02x ", unsafe.getByte(address + i)));
 			if ((i + 1) % 16 == 0) {
-				System.out.println();
+				ps.println();
 			}
     	}	
-    	System.out.println();
+    	ps.println();
     }
     
     public static void dump(Object obj, long size) {
