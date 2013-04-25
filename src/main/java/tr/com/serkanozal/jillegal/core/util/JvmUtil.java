@@ -68,6 +68,7 @@ public class JvmUtil {
 	public static final String JVM_VERSION = System.getProperty("java.vm.version");
 	public static final String JVM_NAME = System.getProperty("java.vm.name");
 	public static final String OS_ARCH = System.getProperty("os.arch");
+	public static final String OS_NAME = System.getProperty("os.name");
 	public static final String OS_VERSION = System.getProperty("os.version");
 	  
 	public static final byte SIZE_32_BIT = 4;
@@ -1016,6 +1017,7 @@ public class JvmUtil {
         System.out.println("Java Runtime Version       : " + JAVA_RUNTIME_VERSION);
         System.out.println("Java Vendor                : " + JAVA_VENDOR);
         System.out.println("OS Architecture            : " + OS_ARCH);
+        System.out.println("OS Name                    : " + OS_NAME);
         System.out.println("OS Version                 : " + OS_VERSION);
         
         System.out.println("Running " + (addressSize * BYTE) + "-bit " + options.name + " VM.");
