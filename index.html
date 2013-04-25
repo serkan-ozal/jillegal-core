@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Jillegal-core : Core repository for all Jillegal frameworks" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Jillegal-core</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/serkan-ozal/jillegal-core">View on GitHub</a>
+
+          <h1 id="project_title">Jillegal-core</h1>
+          <h2 id="project_tagline">Core repository for all Jillegal frameworks</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/serkan-ozal/jillegal-core/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/serkan-ozal/jillegal-core/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2><strong>What is Jillegal?</strong></h2>
+
+<p><strong>Jillegal</strong> is a library including unknown tricks of Java. It abstracts developer from low-level details to implement those tricks.</p>
+
+<h2><strong>What features does Jillegal have?</strong></h2>
+
+<ul>
+<li><p>Accessing and setting any value at any address (as HEX address) in application is supported.</p></li>
+<li><p>Accessing real memory address of any object is supported. So you can change any object in memory by getting its address and copying your custom object to its address.</p></li>
+<li><p>Calculating shallow size of objects, arrays and types is supported.</p></li>
+<li><p>Showing/Dumping memory layout of objects, classes and fields is supported.</p></li>
+<li><p>All of these features are supported for both of 32-bit and 64-bit JVM / OS.</p></li>
+<li><p>All of these features are supported for <strong>Sun HotSpot</strong> JVM and <strong>Oracle JRockit</strong> JVM.</p></li>
+<li><p>All of these features are supported for Java-6 and Java-7.</p></li>
+<li><p>All of these features are supported for both of <strong>compressed-oops</strong> (-XX:+UseCompressedOops) and <strong>uncompressed-oops</strong> (-XX:-UseCompressedOops) modes of JVM.</p></li>
+</ul><h2><strong>Install</strong></h2>
+
+<p>In your <strong>pom.xml</strong>, you must add repository and dependency for Jillegal. 
+You can change <strong>jillegal.core.version</strong> to any existing <strong>jillegal-core</strong> library version.</p>
+
+<pre><code>...
+&lt;properties&gt;
+    ...
+    &lt;jillegal.core.version&gt;1.0.0-RELEASE&lt;/jillegal.core.version&gt;
+    ...
+&lt;/properties&gt;
+...
+&lt;dependencies&gt;
+    ...
+    &lt;dependency&gt;
+        &lt;groupId&gt;tr.com.serkanozal&lt;/groupId&gt;
+        &lt;artifactId&gt;jillegal-core&lt;/artifactId&gt;
+        &lt;version&gt;${jillegal.core.version}&lt;/version&gt;
+    &lt;/dependency&gt;
+    ...
+&lt;/dependencies&gt;
+...
+&lt;repositories&gt;
+    ...
+    &lt;repository&gt;
+        &lt;id&gt;serkanozal-maven-repository&lt;/id&gt;
+        &lt;url&gt;https://github.com/serkan-ozal/maven-repository/raw/master/&lt;/url&gt;
+    &lt;/repository&gt;
+    ...
+&lt;/repositories&gt;
+...
+</code></pre>
+
+<h2><strong>Jillegal-Core with simple examples</strong></h2>
+
+<p>You can access all demo codes from here: <a href="https://github.com/serkan-ozal/jillegal-core-demo">jillegal-core-demo</a></p>
+
+<h3><em>Jvm Util Example</em></h3>
+
+<pre><code>JvmUtil.info();
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+SampleClass obj = new SampleClass();
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+long addressOfObj = JvmUtil.addressOf(obj);
+long sizeOfObj = JvmUtil.sizeOf(obj);
+System.out.println("Memory Layout of SampleClass object: ");
+System.out.println("==========================================================");
+JvmUtil.dump(addressOfObj, sizeOfObj);
+System.out.println("==========================================================\n\n");
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+long addressOfField_b = JvmUtil.addressOfStaticField(SampleClass.class, "b");
+long addressOfClass = JvmUtil.addressOfClass(obj.getClass());
+long sizeToDump =  (addressOfField_b - addressOfClass) + JvmUtil.BYTE_SIZE;
+System.out.println("Memory Layout of SampleClass class: ");
+System.out.println("==========================================================");
+JvmUtil.dump(addressOfClass, sizeToDump);
+System.out.println("==========================================================\n\n");
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+System.out.println("Field Layout of SampleClass object: ");
+System.out.println("==========================================================");
+System.out.println(JvmUtil.fieldsLayoutAsString(obj.getClass()));
+System.out.println("==========================================================\n\n");
+
+///////////////////////////////////////////////////////////////////////////////////////
+
+@SuppressWarnings("serial")
+List&lt;SampleClass&gt; list = new ArrayList&lt;SampleClass&gt;() {{
+    add(new SampleClass());
+    add(new SampleClass());
+    add(new SampleClass());
+}};
+
+System.out.println("Dump of sample list with elements typed SampleClass: ");
+System.out.println("==========================================================");
+System.out.println(JvmUtil.dump(list));
+System.out.println("==========================================================\n\n");
+</code></pre>
+
+<p><em>Output:</em></p>
+
+<pre><code>JVM Name                   : Java HotSpot(TM) 64-Bit Server VM
+JVM Version                : 20.5-b03
+JVM Vendor                 : Sun Microsystems Inc.
+Java Version               : 1.6.0_30
+Java Specification Version : 1.6
+Java Runtime Version       : 1.6.0_30-b12
+Java Vendor                : Sun Microsystems Inc.
+OS Architecture            : amd64
+OS Name                    : Windows 7
+OS Version                 : 6.1
+Running 64-bit HotSpot VM.
+Using compressed references with 3-bit shift.
+Objects are 8 bytes aligned.
+
+Memory Layout of SampleClass object: 
+==========================================================
+[0x0000]: 01 93 fd 09 7f 00 00 00 a8 41 8c ef 05 00 00 00 
+[0x0010]: 0a 00 00 00 00 00 00 00 
+==========================================================
+
+
+Memory Layout of SampleClass class: 
+==========================================================
+[0x0000]: 01 00 00 00 00 00 00 00 4b 00 80 ef 00 00 00 00 
+[0x0010]: 10 e5 e7 6d 00 00 00 00 18 00 00 00 38 00 00 00 
+[0x0020]: 00 00 00 00 00 00 00 00 08 1f 00 7c 07 00 00 00 
+[0x0030]: 58 8e 00 7c 07 00 00 00 40 0d 62 7c 07 00 00 00 
+[0x0040]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x0050]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x0060]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x0070]: c0 0f 62 7c 07 00 00 00 58 8e 00 7c 07 00 00 00 
+[0x0080]: f8 99 28 7c 07 00 00 00 00 00 00 00 00 00 00 00 
+[0x0090]: 48 fb 61 7c 07 00 00 00 09 00 00 00 21 00 20 00 
+[0x00a0]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x00b0]: 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x00c0]: c8 11 62 7c 07 00 00 00 88 07 62 7c 07 00 00 00 
+[0x00d0]: f8 1e 00 7c 07 00 00 00 08 1f 00 7c 07 00 00 00 
+[0x00e0]: 08 1f 00 7c 07 00 00 00 48 07 62 7c 07 00 00 00 
+[0x00f0]: f0 04 62 7c 07 00 00 00 d0 01 03 da 07 00 00 00 
+[0x0100]: 18 02 03 da 07 00 00 00 00 00 00 00 00 00 00 00 
+[0x0110]: 00 00 00 00 00 00 00 00 a0 9e 28 7c 07 00 00 00 
+[0x0120]: 00 00 00 00 00 00 00 00 28 10 62 7c 07 00 00 00 
+[0x0130]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x0140]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x0150]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x0160]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x0170]: 00 00 00 00 00 00 00 00 03 00 00 00 01 00 00 00 
+[0x0180]: 00 00 00 00 00 00 00 00 00 01 01 01 00 00 32 00 
+[0x0190]: 05 00 00 00 00 00 00 00 00 c0 57 00 00 00 00 00 
+[0x01a0]: 09 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 
+[0x01b0]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x01c0]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x01d0]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x01e0]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x01f0]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x0200]: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+[0x0210]: 00 00 00 00 00 00 00 00 06 00 00 00 00 00 00 00 
+[0x0220]: f0 8c 00 7c 07 00 00 00 80 85 00 7c 07 00 00 00 
+[0x0230]: 68 87 00 7c 07 00 00 00 90 84 00 7c 07 00 00 00 
+[0x0240]: 58 86 00 7c 07 00 00 00 08 09 62 7c 07 00 00 00 
+[0x0250]: 00 0a 62 7c 07 00 00 00 e8 0a 62 7c 07 00 00 00 
+[0x0260]: e0 0b 62 7c 07 00 00 00 00 00 00 00 00 00 00 00 
+[0x0270]: 00 00 00 00 00 00 00 00 64 
+==========================================================
+
+
+Field Layout of SampleClass object: 
+==========================================================
+@12  4 SampleClass.i
+@16  8 SampleClass.l
+@24    #shallowSizeOfInstance(tr.com.serkanozal.jillegal.demo.core.util.JvmUtilDemo$SampleClass)
+
+==========================================================
+
+
+Dump of sample list with elements typed SampleClass: 
+==========================================================
+     152       24  root =&gt; &lt;#0&gt;
+     128       56  +- Object[] elementData =&gt; Object[]
+      24       24     +- [0] =&gt; &lt;SampleClass#2&gt;
+      24       24     +- [1] =&gt; &lt;SampleClass#3&gt;
+      24       24     +- [2] =&gt; &lt;SampleClass#4&gt;
+
+==========================================================
+</code></pre>
+
+<h3><em>Direct Memory Access Example</em></h3>
+
+<pre><code>DirectMemoryService directMemoryService = DirectMemoryServiceFactory.getDirectMemoryService();
+
+SampleClass obj = new SampleClass();
+
+long addressOfField_b = JvmUtil.addressOfField(obj, "b");
+long addressOfField_i = JvmUtil.addressOfField(obj, "i");
+long addressOfField_l = JvmUtil.addressOfField(obj, "l");
+
+System.out.println("Value of b with direct memory access: " + directMemoryService.getInt(addressOfField_b));
+System.out.println("Value of i with direct memory access: " + directMemoryService.getInt(addressOfField_i));
+System.out.println("Value of l with direct memory access: " + directMemoryService.getLong(addressOfField_l));
+
+directMemoryService.putByte(addressOfField_b, (byte)10); // Note that b is final static field
+directMemoryService.putInt(addressOfField_i, 55);
+directMemoryService.putLong(addressOfField_l, 100);
+
+System.out.println("Values of b, i and l are changed with direct memory access ...");
+
+System.out.println("Value of b with direct memory access: " + directMemoryService.getByte(addressOfField_b));
+System.out.println("Value of i with direct memory access: " + directMemoryService.getInt(addressOfField_i));
+System.out.println("Value of l with direct memory access: " + directMemoryService.getLong(addressOfField_l));
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+SampleClass objSource = new SampleClass();
+SampleClass objTarget = new SampleClass();
+
+objSource.setI(100);
+objSource.setL(1000);
+
+objTarget.setI(200);
+objTarget.setL(2000);
+
+System.out.println("Value of i on targetObject: " + objTarget.getI());
+System.out.println("Value of l on targetObject: " + objTarget.getL());
+
+directMemoryService.setObject(objSource, objTarget);
+
+System.out.println("Source object has been directly copied to target object ...");
+
+System.out.println("Value of i on targetObject: " + objTarget.getI());
+System.out.println("Value of l on targetObject: " + objTarget.getL());
+</code></pre>
+
+<p><em>Output:</em></p>
+
+<pre><code>Value of b with direct memory access: 100
+Value of i with direct memory access: 5
+Value of l with direct memory access: 10
+Values of b, i and l are changed with direct memory access ...
+Value of b with direct memory access: 10
+Value of i with direct memory access: 55
+Value of l with direct memory access: 100
+Value of i on targetObject: 200
+Value of l on targetObject: 2000
+Source object has been directly copied to target object ...
+Value of i on targetObject: 100
+Value of l on targetObject: 1000
+</code></pre>
+
+<h2><strong>Roadmap</strong></h2>
+
+<ul>
+<li>
+<strong>IBM J9</strong> JVM support will be added.</li>
+</ul>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Jillegal-core maintained by <a href="https://github.com/serkan-ozal">serkan-ozal</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
