@@ -71,6 +71,8 @@ public class JvmUtil {
 	public static final String OS_ARCH = System.getProperty("os.arch");
 	public static final String OS_NAME = System.getProperty("os.name");
 	public static final String OS_VERSION = System.getProperty("os.version");
+	
+	public static final JavaVersionInfo JAVA_VERSION_INFO = findJavaVersionInfo();
 	  
 	public static final byte SIZE_32_BIT = 4;
     public static final byte SIZE_64_BIT = 8;
@@ -94,8 +96,11 @@ public class JvmUtil {
     public static final int CLASS_DEF_POINTER_OFFSET_IN_OBJECT_FOR_32_BIT = 4;
     public static final int CLASS_DEF_POINTER_OFFSET_IN_OBJECT_FOR_64_BIT = 8;
     
-    public static final int CLASS_DEF_POINTER_OFFSET_IN_CLASS_32_BIT = 8; 
-    public static final int CLASS_DEF_POINTER_OFFSET_IN_CLASS_64_BIT = 12;
+    public static final int CLASS_DEF_POINTER_OFFSET_IN_CLASS_32_BIT_FOR_JAVA_1_6 = 8; 
+    public static final int CLASS_DEF_POINTER_OFFSET_IN_CLASS_64_BIT_FOR_JAVA_1_6 = 12;
+    
+    public static final int CLASS_DEF_POINTER_OFFSET_IN_CLASS_32_BIT_FOR_JAVA_1_7 = 80; 
+    public static final int CLASS_DEF_POINTER_OFFSET_IN_CLASS_64_BIT_FOR_JAVA_1_7 = 84;
     
     public static final int SIZE_FIELD_OFFSET_IN_CLASS_32_BIT = 12;
     public static final int SIZE_FIELD_OFFSET_IN_CLASS_64_BIT = 24;
@@ -167,12 +172,22 @@ public class JvmUtil {
         switch (addressSize) {
             case SIZE_32_BIT:
             	JvmUtil.classDefPointerOffsetInObject = CLASS_DEF_POINTER_OFFSET_IN_OBJECT_FOR_32_BIT;
-            	JvmUtil.classDefPointerOffsetInClass = CLASS_DEF_POINTER_OFFSET_IN_CLASS_32_BIT;
+            	if (isJava_1_6()) {
+            		JvmUtil.classDefPointerOffsetInClass = CLASS_DEF_POINTER_OFFSET_IN_CLASS_32_BIT_FOR_JAVA_1_6;
+            	}	
+            	else if (isJava_1_7()) {
+            		JvmUtil.classDefPointerOffsetInClass = CLASS_DEF_POINTER_OFFSET_IN_CLASS_32_BIT_FOR_JAVA_1_7;
+            	}
             	JvmUtil.sizeFieldOffsetOffsetInClass = SIZE_FIELD_OFFSET_IN_CLASS_32_BIT;
                 break;
             case SIZE_64_BIT:
             	JvmUtil.classDefPointerOffsetInObject = CLASS_DEF_POINTER_OFFSET_IN_OBJECT_FOR_64_BIT;
-            	JvmUtil.classDefPointerOffsetInClass = CLASS_DEF_POINTER_OFFSET_IN_CLASS_64_BIT;
+            	if (isJava_1_6()) {
+            		JvmUtil.classDefPointerOffsetInClass = CLASS_DEF_POINTER_OFFSET_IN_CLASS_64_BIT_FOR_JAVA_1_6;
+            	}
+            	else if (isJava_1_7()) {
+            		JvmUtil.classDefPointerOffsetInClass = CLASS_DEF_POINTER_OFFSET_IN_CLASS_64_BIT_FOR_JAVA_1_7;
+            	}
             	JvmUtil.sizeFieldOffsetOffsetInClass = SIZE_FIELD_OFFSET_IN_CLASS_64_BIT;
                 break;
             default:
@@ -184,12 +199,24 @@ public class JvmUtil {
 		return unsafe;
 	}
 	
+	private static JavaVersionInfo findJavaVersionInfo() {
+		if (JAVA_SPEC_VERSION.equals(JAVA_1_6)) {
+			return JavaVersionInfo.JAVA_VERSION_1_6;
+		}
+		else if (JAVA_SPEC_VERSION.equals(JAVA_1_7)) {
+			return JavaVersionInfo.JAVA_VERSION_1_7;
+		}
+		else {
+			throw new AssertionError("Java version is not supported: " + JAVA_SPEC_VERSION); 
+		}
+	}
+
 	public static boolean isJava_1_6() {
-		return JAVA_SPEC_VERSION.equals(JAVA_1_6);
+		return JAVA_VERSION_INFO == JavaVersionInfo.JAVA_VERSION_1_6;
 	}
 
 	public static boolean isJava_1_7() {
-		return JAVA_SPEC_VERSION.equals(JAVA_1_7);
+		return JAVA_VERSION_INFO == JavaVersionInfo.JAVA_VERSION_1_7;
 	}
 	
 	public static boolean isJavaVersionSupported() {
@@ -202,6 +229,10 @@ public class JvmUtil {
 	
 	public static int getAddressSize() {
 		return addressSize;
+	}
+	
+	public static boolean isAddressSizeSupported() {
+		return addressSize == SIZE_32_BIT || addressSize == SIZE_64_BIT;
 	}
 	
 	public static int getHeaderSize() {
@@ -252,7 +283,7 @@ public class JvmUtil {
 		return options.name;
 	}
 	
-    private static long normalize(int value) {
+    public static long normalize(int value) {
         if (value >= 0) {
             return value;
         }    
@@ -316,7 +347,7 @@ public class JvmUtil {
         long fieldOffset = 0;
         Field field = obj.getClass().getDeclaredField(fieldName);
         if (Modifier.isStatic(field.getModifiers())) {
-        	baseAddress = addressOfClassInternal(obj.getClass());
+        	baseAddress = addressOfClassBase(obj.getClass());
         	fieldOffset = unsafe.staticFieldOffset(field);
         }
         else {
@@ -331,7 +362,7 @@ public class JvmUtil {
         long fieldOffset = 0;
         Field field = clazz.getDeclaredField(fieldName);
         if (Modifier.isStatic(field.getModifiers())) {
-        	baseAddress = addressOfClassInternal(clazz);
+        	baseAddress = addressOfClassBase(clazz);
         	fieldOffset = unsafe.staticFieldOffset(field);
         }
         else {
@@ -344,13 +375,35 @@ public class JvmUtil {
     	return getClassInfo(clazz).classAddress;
     }
     
-    private static long addressOfClassInternal(Class<?> clazz) {
+    private static long addressOfClassBase(Class<?> clazz) {
     	long addressOfClass = addressOf(clazz);
     	
     	if (isJava_1_7()) {
     		return addressOfClass;
     	}
+    	
+    	int addressSize = JvmUtil.getAddressSize();
+    	switch (addressSize) {
+	        case JvmUtil.SIZE_32_BIT:
+	            return JvmUtil.toNativeAddress(normalize(unsafe.getInt(addressOfClass + JvmUtil.getClassDefPointerOffsetInClass())));
+	        case JvmUtil.SIZE_64_BIT:
+	        	int referenceSize = JvmUtil.getReferenceSize();
+            	switch (referenceSize) {
+                 	case JvmUtil.ADDRESSING_4_BYTE:
+                 		return JvmUtil.toNativeAddress(normalize(unsafe.getInt(addressOfClass + JvmUtil.getClassDefPointerOffsetInClass())));
+                 	case JvmUtil.ADDRESSING_8_BYTE:
+                 		return JvmUtil.toNativeAddress(unsafe.getLong(addressOfClass + JvmUtil.getClassDefPointerOffsetInClass())); 
+                 	default:    
+                        throw new AssertionError("Unsupported reference size: " + referenceSize);
+            	 }    
+	        default:    
+                throw new AssertionError("Unsupported address size: " + addressSize);     
+    	}
+    }
     
+    private static long addressOfClassInternal(Class<?> clazz) {
+    	long addressOfClass = addressOf(clazz);
+    	
     	int addressSize = JvmUtil.getAddressSize();
     	switch (addressSize) {
 	        case JvmUtil.SIZE_32_BIT:
@@ -477,7 +530,7 @@ public class JvmUtil {
             return 0;
         }    
         else {
-        	long classAddress = JvmUtil.addressOfClassInternal(obj.getClass());
+        	long classAddress = JvmUtil.addressOfClassBase(obj.getClass());
         	int addressSize = JvmUtil.getAddressSize();
             switch (addressSize) {
                 case JvmUtil.SIZE_32_BIT:
@@ -1460,6 +1513,23 @@ public class JvmUtil {
 	    	return children;
 	    }
 	    
+	}
+	
+	public enum JavaVersionInfo {
+		
+		JAVA_VERSION_1_6(JAVA_1_6),
+		JAVA_VERSION_1_7(JAVA_1_7);
+		
+		String name;
+		
+		JavaVersionInfo(String name) {
+			this.name = name;
+		}
+		
+		public String getName() {
+			return name;
+		}
+		
 	}
 	 
 }
